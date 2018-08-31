@@ -28,4 +28,6 @@ Fomo3dAirDropAttackContract
 
 微信: yangkun0824  
 
+![](https://github.com/yangkun0824/Fomo3d_AirDrop_Attack_Contract/blob/master/wechat.jpeg)
+
 Email: yangkun0824@gmail.com
