@@ -7,6 +7,10 @@ Fomo3d 空头bug，根据空投漏洞来获取ETH
 
 这是一个合约管理器，调用此合约完成对类似FOMO3d游戏的空投攻击。
 
+参考了安比实验室的文章实现  
+
+https://mp.weixin.qq.com/s/YBG8YyPwh374HbGWcUKTdQ
+
 ## 合约结构
 
 主管理合约  
