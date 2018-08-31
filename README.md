@@ -2,8 +2,7 @@
 
 Fomo3d空投攻击合约管理器
 
-Fomo3d airdrop bug
-Fomo3d 空头bug，根据空投漏洞来获取ETH
+根据空投漏洞来获取ETH
 
 这是一个合约管理器，调用此合约完成对类似FOMO3d游戏的空投攻击。
 
@@ -24,6 +23,15 @@ Fomo3dAirDropChildContract
 空投攻击合约 （攻击完成后销毁）  
 
 Fomo3dAirDropAttackContract
+
+
+## 使用帮助
+
+1. 部署管理合约
+
+2. 调用addChild方法子合约
+
+3. 调用管理合约的checkAndAttack方法。
 
 
 ## Contact Author
